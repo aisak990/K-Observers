@@ -1,0 +1,90 @@
+import React, { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { motion } from 'framer-motion';
+
+const initialPlayers = [
+  { id: 1, name: 'Alex', count: 0, image: '/avatars/alex.jpg', password: 'alex123', active: true },
+  { id: 2, name: 'Sam', count: 0, image: '/avatars/sam.jpg', password: 'sam123', active: true },
+  { id: 3, name: 'Jordan', count: 0, image: '/avatars/jordan.jpg', password: 'jordan123', active: true },
+  { id: 4, name: 'Taylor', count: 0, image: '/avatars/taylor.jpg', password: 'taylor123', active: true },
+  { id: 5, name: 'Casey', count: 0, image: '/avatars/casey.jpg', password: 'casey123', active: true },
+  { id: 6, name: 'K91', count: 0, image: '/avatars/k91.jpg', password: 'k91123', active: false },
+];
+
+export default function EMSRace() {
+  const [players, setPlayers] = useState(initialPlayers);
+  const [passwords, setPasswords] = useState({});
+
+  const handleInputChange = (id, value) => {
+    setPasswords((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleCallTaken = (player) => {
+    if (!player.active) return;
+    if (passwords[player.id] !== player.password) {
+      alert('Incorrect password');
+      return;
+    }
+
+    setPlayers((prev) => {
+      const updated = prev.map((p) =>
+        p.id === player.id ? { ...p, count: p.count + 1 } : p
+      );
+
+      const index = updated.findIndex((p) => p.id === player.id);
+      const person = updated[index];
+
+      const activePlayers = updated.filter((p) => p.active && p.id !== player.id);
+      const reordered = [...activePlayers, person];
+      const inactivePlayers = updated.filter((p) => !p.active);
+
+      return [...reordered, ...inactivePlayers];
+    });
+
+    setPasswords((prev) => ({ ...prev, [player.id]: '' }));
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center gap-6">
+      <h1 className="text-3xl font-bold">🚑 EMS Race to 100</h1>
+
+      <div className="flex gap-4 flex-wrap justify-center">
+        {players.map((player) => (
+          <motion.div
+            key={player.id}
+            layout
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          >
+            <Card className={`p-4 flex flex-col items-center gap-2 rounded-2xl shadow-lg w-40 bg-white ${!player.active ? 'opacity-50' : ''}`}>
+              <img
+                src={player.image}
+                alt={player.name}
+                className="w-20 h-20 rounded-full object-cover border-2 border-blue-400"
+              />
+              <div className="text-lg font-semibold">{player.name}</div>
+              <div className="text-sm text-gray-600">Calls: {player.count}</div>
+              <Progress value={(player.count / 100) * 100} className="w-full mt-1" />
+              {player.active && (
+                <>
+                  <Input
+                    type="password"
+                    placeholder="Enter password"
+                    value={passwords[player.id] || ''}
+                    onChange={(e) => handleInputChange(player.id, e.target.value)}
+                    className="mt-2"
+                  />
+                  <Button onClick={() => handleCallTaken(player)} className="mt-2">
+                    I took a call
+                  </Button>
+                </>
+              )}
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
